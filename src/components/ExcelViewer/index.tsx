@@ -562,7 +562,7 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
                                       <Flex>
                                         <Flex>
                                           <Text>线别</Text>
-                                            <CheckboxGroup.Root
+                                          <CheckboxGroup.Root
                                                 defaultValue={['1']}
                                                 name='example'
                                             >
