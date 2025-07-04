@@ -207,7 +207,7 @@ export const useExcelDataProcessor = () => {
                    
                     result[key] = (result[key] || 0) + 1
                 
-            }
+            
         }
         
         return result
