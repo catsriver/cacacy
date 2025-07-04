@@ -201,78 +201,12 @@ export const useExcelUpload = () => {
         setCurrentFile(null)
     }, [])
 
-    const exportToCSV = useCallback((sheet: ExcelSheet) => {
-        const csvContent = sheet.data
-            .map((row) =>
-                row
-                    .map((cell) => {
-                        // 处理包含逗号、引号或换行符的单元格
-                        const cellStr = String(cell || '')
-                        if (
-                            cellStr.includes(',') ||
-                            cellStr.includes('"') ||
-                            cellStr.includes('\n')
-                        ) {
-                            return `"${cellStr.replace(/"/g, '""')}"`
-                        }
-                        return cellStr
-                    })
-                    .join(',')
-            )
-            .join('\n')
-
-        const blob = new Blob(['\uFEFF' + csvContent], {
-            type: 'text/csv;charset=utf-8;'
-        })
-        const link = document.createElement('a')
-        const url = URL.createObjectURL(blob)
-        link.setAttribute('href', url)
-        link.setAttribute('download', `${sheet.name}.csv`)
-        link.style.visibility = 'hidden'
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
-    }, [])
-
-    const exportToJSON = useCallback((sheet: ExcelSheet) => {
-        if (sheet.data.length === 0) {
-            alert('没有可导出的数据')
-            return
-        }
-
-        const headers = sheet.data[0] || []
-        const jsonData = sheet.data.slice(1).map((row) => {
-            const obj: Record<string, string | number | null> = {}
-            headers.forEach((header, index) => {
-                obj[header || `Column${index + 1}`] = row[index] || ''
-            })
-            return obj
-        })
-
-        const jsonContent = JSON.stringify(jsonData, null, 2)
-        const blob = new Blob([jsonContent], {
-            type: 'application/json;charset=utf-8;'
-        })
-        const link = document.createElement('a')
-        const url = URL.createObjectURL(blob)
-        link.setAttribute('href', url)
-        link.setAttribute('download', `${sheet.name}.json`)
-        link.style.visibility = 'hidden'
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
-    }, [])
-
     return {
         currentFile,
         isDragging,
         isProcessing,
         setIsDragging,
         uploadFile,
-        clearFile,
-        exportToCSV,
-        exportToJSON
+        clearFile
     }
 }
