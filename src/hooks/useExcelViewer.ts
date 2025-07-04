@@ -80,7 +80,7 @@ export const useExcelViewer = (file: ExcelFile | null) => {
                         return
                     }
 
-                  console.log(filtered)
+                  
 
                     // 3.分组统计
                     const counted = Object.values(filtered)
