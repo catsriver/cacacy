@@ -1,3 +1,58 @@
+/* 筛选功能区样式 */
+.filter-section {
+  background: var(--gray-2);
+  border: 1px solid var(--gray-6);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.filter-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-option {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid var(--gray-6);
+  background: var(--gray-1);
+}
+
+.filter-option:hover {
+  background: var(--blue-3);
+  border-color: var(--blue-7);
+}
+
+.filter-option[data-state="checked"] {
+  background: var(--blue-9);
+  color: var(--blue-1);
+  border-color: var(--blue-9);
+}
+
 .processing-indicator {
   display: inline-flex;
   align-items: center;
