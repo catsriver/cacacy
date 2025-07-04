@@ -567,14 +567,15 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
                                                 name='example'
                                             >
                                                 <CheckboxGroup.Item value='1'>
-                                                    脏污
+                                                 
                                                 </CheckboxGroup.Item>
                                                 <CheckboxGroup.Item value='3'>
-                                                   划伤
+                                                 
                                                 </CheckboxGroup.Item>
                                             </CheckboxGroup.Root>
                                           </Flex>
                                         <Flex>
+                                          <Text>不良项</Text>
                                            <CheckboxGroup.Root
                                                 defaultValue={['1']}
                                                 name='example'
