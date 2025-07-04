@@ -195,16 +195,9 @@ export const useExcelDataProcessor = () => {
         generateKey: (item: T) => string
     ): GroupedData => {
         const result: GroupedData = {}
-        
-        if (!arr || !Array.isArray(arr)) {
-            return result
-        }
 
         for (const item of arr) {
-           
-                const groupKey = generateKey(item)
-                
-                   
+                const groupKey = generateKey(item)  
                     result[key] = (result[key] || 0) + 1
                 
             
