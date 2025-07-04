@@ -24,7 +24,33 @@ export const useExcelOperations = () => {
                 // 使用现代剪切板 API
                 if (navigator.clipboard && window.isSecureContext) {
                     await navigator.clipboard.writeText(textContent)
+                } else {
+                    // 降级方案：使用传统的复制方法
+                    const textArea = document.createElement('textarea')
+                    textArea.value = textContent
+                    textArea.style.position = 'fixed'
+                    textArea.style.left = '-999999px'
+                    textArea.style.top = '-999999px'
+                    document.body.appendChild(textArea)
+                    textArea.focus()
+                    textArea.select()
+                    document.execCommand('copy')
+                    document.body.removeChild(textArea)
                 }
+
+                // 标记为已复制
+                setCopiedSheets(prev => new Set([...prev, sheet.name]))
+                
+                // 2秒后清除复制状态
+                setTimeout(() => {
+                    setCopiedSheets(prev => {
+                        const newSet = new Set(prev)
+                        newSet.delete(sheet.name)
+                        return newSet
+                    })
+                }, 2000)
+
+                return true
             } catch (error) {
                 console.error('复制到剪切板时出错:', error)
                 throw new Error('复制失败，请重试')
@@ -43,6 +69,8 @@ export const useExcelOperations = () => {
         async (sheet: ExcelSheet) => {
             if (isOperating) return false
 
+            setIsOperating(true)
+
             try {
                 if (sheet.data.length === 0) {
                     throw new Error(`${sheet.name}没有可导出的数据`)
@@ -57,7 +85,7 @@ export const useExcelOperations = () => {
                 // 设置列宽
                 const columnWidths = sheet.data[0].map((_, index) => {
                     const maxLength = Math.max(
-                        ...sheet.data.map((row) => String(row[index]).length)
+                        ...sheet.data.map((row) => String(row[index] || '').length)
                     )
 
                     // 6 < 内容宽度 < 50
@@ -98,6 +126,8 @@ export const useExcelOperations = () => {
 
                 // 导出文件
                 XLSX.writeFile(workbook, fullFilename)
+
+                return true
             } catch (error) {
                 console.error('导出 Excel 文件时出错:', error)
                 throw new Error('导出失败，请重试')
