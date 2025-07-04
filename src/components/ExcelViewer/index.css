@@ -34,28 +34,27 @@
   }
 }
 
-/* 表格样式优化 - 参考图片样式 */
+/* 表格样式优化 */
 .excel-viewer table {
   border-collapse: separate;
   border-spacing: 0;
   width: 100%;
-  border: 1px solid var(--gray-7);
-  border-radius: 6px;
+  border: 1px solid var(--gray-6);
+  border-radius: 8px;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
 .excel-viewer th,
 .excel-viewer td {
-  border-right: 1px solid var(--gray-7);
-  border-bottom: 1px solid var(--gray-7);
+  border-right: 1px solid var(--gray-6);
+  border-bottom: 1px solid var(--gray-6);
   padding: 8px 12px;
   text-align: center;
   vertical-align: middle;
-  white-space: nowrap;
+  min-width: 2ch;
+  max-width: fit-content;
+  word-wrap: break-word;
   position: relative;
-  font-size: 13px;
-  line-height: 1.4;
 }
 
 .excel-viewer th:last-child,
@@ -67,91 +66,55 @@
   border-bottom: none;
 }
 
-/* 表头样式 - 蓝色背景 */
 .excel-viewer th {
-  background: #e3f2fd;
-  color: var(--gray-12);
+  background: linear-gradient(135deg, var(--blue-4) 0%, var(--blue-5) 100%);
+  color: var(--blue-12);
   font-weight: 600;
   font-size: 13px;
   position: sticky;
   top: 0;
   z-index: 2;
-  border-bottom: 1px solid var(--gray-7);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* 数据行样式 */
 .excel-viewer td {
   background: var(--gray-1);
-  font-size: 13px;
-  transition: background-color 0.15s ease;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
 }
 
 .excel-viewer tr:hover td {
   background: var(--blue-2);
 }
 
-/* 设备ID列样式 */
-.excel-viewer .device-id-cell {
-  background: var(--gray-1);
-  text-align: left;
-  padding-left: 16px;
-  min-width: 180px;
-  max-width: max-content;
-  font-weight: 500;
-}
-
-.excel-viewer tr:hover .device-id-cell {
-  background: var(--blue-2);
-}
-
-/* 数量列样式 - 绿色背景 */
-.excel-viewer .quantity-cell {
-  background: #e8f5e8;
-  text-align: center;
-  font-weight: 600;
-  color: var(--gray-12);
-  min-width: 60px;
-  max-width: max-content;
-}
-
-.excel-viewer tr:hover .quantity-cell {
-  background: #d4edda;
-}
-
-/* 分隔列样式 */
-.excel-viewer .separator-cell {
-  background: var(--gray-3);
-  min-width: 4ch;
-  max-width: 4ch;
-  padding: 8px 4px;
-  border-left: 1px solid var(--gray-7);
-  border-right: 1px solid var(--gray-7);
-}
-
-.excel-viewer tr:hover .separator-cell {
-  background: var(--gray-4);
-}
-
-/* 空白单元格样式 */
-.excel-viewer .empty-cell {
+.excel-viewer tr:nth-child(even) td {
   background: var(--gray-2);
+}
+
+.excel-viewer tr:nth-child(even):hover td {
+  background: var(--blue-3);
+}
+
+/* 空单元格样式 */
+.excel-viewer .empty-cell {
+  background: var(--gray-3);
   color: var(--gray-9);
   font-style: italic;
-  min-width: 4ch;
-  max-width: max-content;
 }
 
-.excel-viewer tr:hover .empty-cell {
-  background: var(--gray-3);
+/* 数字单元格右对齐 */
+.excel-viewer .number-cell {
+  text-align: right;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-weight: 500;
 }
 
 /* 表格容器样式 */
 .table-container {
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   background: var(--gray-1);
-  border: 1px solid var(--gray-7);
 }
 
 /* JSON 预览样式 */
@@ -197,18 +160,4 @@
   border-top: 1px solid var(--orange-6);
   color: var(--orange-11);
   font-weight: 500;
-}
-
-/* 响应式优化 */
-@media (max-width: 768px) {
-  .excel-viewer th,
-  .excel-viewer td {
-    padding: 6px 8px;
-    font-size: 12px;
-  }
-  
-  .excel-viewer .device-id-cell {
-    min-width: 120px;
-    padding-left: 12px;
-  }
 }
