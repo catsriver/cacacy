@@ -44,6 +44,7 @@ export const useExcelViewer = (file: ExcelFile | null) => {
         }
 
         const targetDefects = ['脏污', '划伤']
+        const targetLines = []
         const previewData: ExcelSheet[] = []
 
         try {
