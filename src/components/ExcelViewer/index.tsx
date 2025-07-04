@@ -574,7 +574,19 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
                                                 </CheckboxGroup.Item>
                                             </CheckboxGroup.Root>
                                           </Flex>
-                                        <Flex></Flex>
+                                        <Flex>
+                                           <CheckboxGroup.Root
+                                                defaultValue={['1']}
+                                                name='example'
+                                            >
+                                                <CheckboxGroup.Item value='1'>
+                                                    脏污
+                                                </CheckboxGroup.Item>
+                                                <CheckboxGroup.Item value='3'>
+                                                   划伤
+                                                </CheckboxGroup.Item>
+                                            </CheckboxGroup.Root>
+                                        </Flex>
                                     </Flex>
 
                                         {/* 渲染表格数据 */}
