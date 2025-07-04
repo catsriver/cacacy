@@ -61,6 +61,11 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
         }
     }, [previewMode, currentDisplayData.length, selectedSheet])
 
+    // 判断是否为数字
+    const isNumber = (value: any): boolean => {
+        return !isNaN(value) && !isNaN(parseFloat(value)) && value !== '' && value !== null
+    }
+
     // 渲染表格预览
     const renderTablePreview = (
         sheet: ExcelSheet,
@@ -112,78 +117,134 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
 
         return (
             <ScrollArea style={{ maxHeight: '600px' }}>
-                <Table.Root>
-                    <Table.Header>
-                        <Table.Row>
-                            {headers.map((header, index) => (
-                                <Table.ColumnHeaderCell
-                                    key={index}
-                                    style={{ 
-                                        minWidth: mode === 'analysis' ? '120px' : '100px',
-                                        maxWidth: mode === 'original' ? '200px' : 'none'
-                                    }}
-                                >
-                                    <Text size="2" weight="medium">
-                                        {String(header || `列${index + 1}`)}
-                                    </Text>
-                                </Table.ColumnHeaderCell>
-                            ))}
-                            {showColTruncation && (
-                                <Table.ColumnHeaderCell>
-                                    <Text
-                                        size='2'
-                                        style={{ color: 'var(--gray-10)' }}
-                                    >
-                                        ...还有 {sheet.colCount - maxCols} 列
-                                    </Text>
-                                </Table.ColumnHeaderCell>
-                            )}
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {dataRows.map((row, rowIndex) => (
-                            <Table.Row key={rowIndex}>
-                                {row.map((cell, cellIndex) => (
-                                    <Table.Cell
-                                        key={cellIndex}
+                <Box className="table-container excel-viewer">
+                    <Table.Root>
+                        <Table.Header>
+                            <Table.Row>
+                                {headers.map((header, index) => (
+                                    <Table.ColumnHeaderCell
+                                        key={index}
                                         style={{ 
-                                            maxWidth: mode === 'original' ? '200px' : 'none',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            whiteSpace: 'nowrap'
+                                            minWidth: '2ch',
+                                            maxWidth: 'fit-content',
+                                            textAlign: 'center',
+                                            padding: '12px 16px',
+                                            background: 'linear-gradient(135deg, var(--blue-4) 0%, var(--blue-5) 100%)',
+                                            color: 'var(--blue-12)',
+                                            fontWeight: '600',
+                                            fontSize: '13px',
+                                            border: '1px solid var(--gray-6)',
+                                            borderBottom: '2px solid var(--blue-7)'
                                         }}
                                     >
-                                        <Text size='2'>
-                                            {String(cell ?? '')}
+                                        <Text size="2" weight="bold">
+                                            {String(header || `列${index + 1}`)}
                                         </Text>
-                                    </Table.Cell>
+                                    </Table.ColumnHeaderCell>
                                 ))}
                                 {showColTruncation && (
-                                    <Table.Cell>
+                                    <Table.ColumnHeaderCell
+                                        style={{
+                                            textAlign: 'center',
+                                            padding: '12px 16px',
+                                            background: 'linear-gradient(135deg, var(--orange-4) 0%, var(--orange-5) 100%)',
+                                            color: 'var(--orange-12)',
+                                            fontWeight: '600',
+                                            fontSize: '13px',
+                                            border: '1px solid var(--gray-6)'
+                                        }}
+                                    >
                                         <Text
                                             size='2'
-                                            style={{ color: 'var(--gray-10)' }}
+                                            weight="bold"
+                                            style={{ color: 'var(--orange-12)' }}
                                         >
-                                            ...
+                                            +{sheet.colCount - maxCols}列
                                         </Text>
-                                    </Table.Cell>
+                                    </Table.ColumnHeaderCell>
                                 )}
                             </Table.Row>
-                        ))}
-                    </Table.Body>
-                </Table.Root>
+                        </Table.Header>
+                        <Table.Body>
+                            {dataRows.map((row, rowIndex) => (
+                                <Table.Row key={rowIndex}>
+                                    {row.map((cell, cellIndex) => {
+                                        const cellValue = String(cell ?? '')
+                                        const isEmpty = cellValue === '' || cellValue === 'null' || cellValue === 'undefined'
+                                        const isNumeric = isNumber(cell)
+                                        
+                                        return (
+                                            <Table.Cell
+                                                key={cellIndex}
+                                                className={`${isEmpty ? 'empty-cell' : ''} ${isNumeric ? 'number-cell' : ''}`}
+                                                style={{ 
+                                                    minWidth: '2ch',
+                                                    maxWidth: 'fit-content',
+                                                    textAlign: isNumeric ? 'right' : 'center',
+                                                    padding: '8px 12px',
+                                                    border: '1px solid var(--gray-6)',
+                                                    fontSize: '12px',
+                                                    verticalAlign: 'middle',
+                                                    wordWrap: 'break-word',
+                                                    background: isEmpty ? 'var(--gray-3)' : 
+                                                               rowIndex % 2 === 0 ? 'var(--gray-1)' : 'var(--gray-2)'
+                                                }}
+                                            >
+                                                <Text 
+                                                    size='2'
+                                                    style={{
+                                                        color: isEmpty ? 'var(--gray-9)' : 'var(--gray-12)',
+                                                        fontStyle: isEmpty ? 'italic' : 'normal',
+                                                        fontFamily: isNumeric ? "'Monaco', 'Menlo', 'Ubuntu Mono', monospace" : 'inherit',
+                                                        fontWeight: isNumeric ? '500' : 'normal'
+                                                    }}
+                                                >
+                                                    {isEmpty ? '空' : cellValue}
+                                                </Text>
+                                            </Table.Cell>
+                                        )
+                                    })}
+                                    {showColTruncation && (
+                                        <Table.Cell
+                                            style={{
+                                                textAlign: 'center',
+                                                padding: '8px 12px',
+                                                border: '1px solid var(--gray-6)',
+                                                background: 'var(--orange-2)',
+                                                fontSize: '12px'
+                                            }}
+                                        >
+                                            <Text
+                                                size='2'
+                                                style={{ color: 'var(--orange-10)' }}
+                                            >
+                                                ...
+                                            </Text>
+                                        </Table.Cell>
+                                    )}
+                                </Table.Row>
+                            ))}
+                        </Table.Body>
+                    </Table.Root>
+                </Box>
 
                 {showRowTruncation && (
                     <Box
+                        className="truncation-notice"
                         p='3'
                         style={{
                             textAlign: 'center',
-                            background: 'var(--gray-2)',
-                            borderTop: '1px solid var(--gray-6)'
+                            background: 'linear-gradient(135deg, var(--orange-2) 0%, var(--orange-3) 100%)',
+                            borderTop: '1px solid var(--orange-6)',
+                            borderRadius: '0 0 8px 8px'
                         }}
                     >
-                        <Text size='2' style={{ color: 'var(--gray-10)' }}>
-                            ...还有 {sheet.rowCount - maxRows} 行数据
+                        <Text 
+                            size='2' 
+                            weight="medium"
+                            style={{ color: 'var(--orange-11)' }}
+                        >
+                            还有 {sheet.rowCount - maxRows} 行数据未显示
                         </Text>
                     </Box>
                 )}
