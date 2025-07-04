@@ -39,18 +39,30 @@ export const useExcelViewer = (file: ExcelFile | null) => {
 
     // 生成预览数据
     const getPreviewData = useMemo(() => {
-        if (!file || file.status !== 'completed') return []
+        if (!file || file.status !== 'completed' || !file.sheets.length) {
+            return []
+        }
 
         const targetDefects = ['脏污', '划伤']
-        // const targetLines = []
-
         const previewData: ExcelSheet[] = []
 
         try {
             file.sheets.forEach((sheet) => {
                 try {
+                    // 检查工作表是否有有效数据
+                    if (!sheet.data || sheet.data.length < 3) {
+                        console.warn(`工作表 ${sheet.name} 数据不足，跳过处理`)
+                        return
+                    }
+
                     // 1.转json
                     const jsonData = sheet2json(sheet)
+                    
+                    // 检查是否成功解析出数据
+                    if (!jsonData || Object.keys(jsonData).length === 0) {
+                        console.warn(`工作表 ${sheet.name} 无法解析出有效的制程数据`)
+                        return
+                    }
 
                     // 2.过滤
                     const filtered = filterWith({
@@ -58,14 +70,29 @@ export const useExcelViewer = (file: ExcelFile | null) => {
                         targetDefects
                     })
 
-                    // 3.分组统计
-                    const counted = Object.values(filtered).map((item) =>
-                        counteByKey(item, (key) => String(key['设备ID'] || ''))
+                    // 检查过滤后是否还有数据
+                    const hasFilteredData = Object.values(filtered).some(
+                        records => records && records.length > 0
                     )
+
+                    if (!hasFilteredData) {
+                        console.warn(`工作表 ${sheet.name} 过滤后无有效数据`)
+                        return
+                    }
+
+                    // 3.分组统计
+                    const counted = Object.values(filtered)
+                        .filter(records => records && records.length > 0)
+                        .map((records) =>
+                            counteByKey(records, (record) => String(record['设备ID'] || ''))
+                        )
 
                     // 4.转换为表格数据
                     if (counted.length > 0) {
-                        previewData.push(generateSheetData(counted, sheet.name))
+                        const generatedSheet = generateSheetData(counted, sheet.name)
+                        if (generatedSheet.data.length > 0) {
+                            previewData.push(generatedSheet)
+                        }
                     }
                 } catch (sheetError) {
                     console.error(
@@ -104,10 +131,10 @@ export const useExcelViewer = (file: ExcelFile | null) => {
     return {
         getStatusColor,
         getStatusText,
+        getPreviewData,
         handleCopyToClipboard,
         handleExportToExcel,
         isSheetCopied,
-        isOperating,
-        getPreviewData
+        isOperating
     }
 }

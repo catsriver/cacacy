@@ -4,7 +4,8 @@ interface ProcessRecord {
     WaferID: string
     线别: string
     不良项: string
-    [key: string]: string | number | null
+    设备ID?: string
+    [key: string]: string | number | null | undefined
 }
 
 export interface SheetJsonData {
@@ -26,7 +27,10 @@ export const useExcelDataProcessor = () => {
     const sheet2json = (sheet: ExcelSheet): SheetJsonData => {
         const result: SheetJsonData = {}
 
-        if (sheet.rowCount < 3 || sheet.data.length < 2) return result
+        if (!sheet || !sheet.data || sheet.rowCount < 3 || sheet.data.length < 2) {
+            console.warn('数据不足，无法解析')
+            return result
+        }
 
         const row1 = sheet.data[0] || []
         const row2 = sheet.data[1] || []
@@ -45,8 +49,8 @@ export const useExcelDataProcessor = () => {
 
         // 识别制程结构
         for (let col = 0; col < sheet.colCount; col++) {
-            const header = String(row1[col] || '')
-            const headerField = String(row2[col] || '')
+            const header = String(row1[col] || '').trim()
+            const headerField = String(row2[col] || '').trim()
 
             if (publicFields.has(header)) {
                 switch (header) {
@@ -61,14 +65,11 @@ export const useExcelDataProcessor = () => {
                         break
                 }
                 currentProcess = null
-            } else if (header) {
+            } else if (header && !excludedFields.has(header)) {
                 if (headerField) {
                     currentProcess = header
 
-                    if (
-                        !excludedFields.has(header) &&
-                        !processMap.has(currentProcess)
-                    ) {
+                    if (!processMap.has(currentProcess)) {
                         processMap.set(currentProcess, {
                             startCol: col,
                             fields: [headerField]
@@ -77,8 +78,17 @@ export const useExcelDataProcessor = () => {
                     }
                 }
             } else if (currentProcess && headerField) {
-                processMap.get(currentProcess)?.fields.push(headerField)
+                const processInfo = processMap.get(currentProcess)
+                if (processInfo) {
+                    processInfo.fields.push(headerField)
+                }
             }
+        }
+
+        // 检查是否找到了必要的列
+        if (waferidIndex === -1 && defectIndex === -1) {
+            console.warn('未找到 WaferID 或不良项列')
+            return result
         }
 
         // 处理数据行
@@ -86,25 +96,41 @@ export const useExcelDataProcessor = () => {
             const row = sheet.data[rowIndex] || []
 
             const publicRecord: Partial<ProcessRecord> = {
-                WaferID: String(row[waferidIndex] ?? ''),
-                不良项: String(row[defectIndex] ?? ''),
-                线别: String(row[lineIndex] ?? '')
+                WaferID: String(row[waferidIndex] ?? '').trim(),
+                不良项: String(row[defectIndex] ?? '').trim(),
+                线别: String(row[lineIndex] ?? '').trim()
             }
 
             for (const [process, info] of processMap.entries()) {
                 const record: ProcessRecord = {
                     ...publicRecord
                 } as ProcessRecord
-                let hasData =
-                    Boolean(publicRecord['WaferID']) ||
-                    Boolean(publicRecord['不良项'])
+                
+                let hasData = Boolean(publicRecord['WaferID']) || Boolean(publicRecord['不良项'])
 
                 for (let i = 0; i < info.fields.length; i++) {
                     const colIndex = info.startCol + i
                     const field = info.fields[i]
-                    record[field] = row[colIndex] ?? null
-                    if (row[colIndex] !== '' && row[colIndex] !== null) {
+                    const cellValue = row[colIndex]
+                    
+                    record[field] = cellValue ?? null
+                    
+                    // 特殊处理设备ID字段
+                    if (field.includes('设备') || field.includes('ID') || field === '设备ID') {
+                        record['设备ID'] = String(cellValue ?? '').trim()
+                    }
+                    
+                    if (cellValue !== '' && cellValue !== null && cellValue !== undefined) {
                         hasData = true
+                    }
+                }
+
+                // 如果没有明确的设备ID字段，尝试从其他字段推断
+                if (!record['设备ID'] && info.fields.length > 0) {
+                    const firstField = info.fields[0]
+                    const firstValue = record[firstField]
+                    if (firstValue && String(firstValue).trim()) {
+                        record['设备ID'] = String(firstValue).trim()
                     }
                 }
 
@@ -131,6 +157,11 @@ export const useExcelDataProcessor = () => {
         const filtered: SheetJsonData = {}
 
         Object.entries(jsonSheet).forEach(([process, records]) => {
+            if (!records || !Array.isArray(records)) {
+                filtered[process] = []
+                return
+            }
+
             // 1.筛选线别
             const filteredByLines =
                 targetLines.length > 0
@@ -164,10 +195,23 @@ export const useExcelDataProcessor = () => {
         generateKey: (item: T) => string
     ): GroupedData => {
         const result: GroupedData = {}
-        for (const item of arr) {
-            const groupKey = generateKey(item)
-            result[groupKey] = (result[groupKey] || 0) + 1
+        
+        if (!arr || !Array.isArray(arr)) {
+            return result
         }
+
+        for (const item of arr) {
+            try {
+                const groupKey = generateKey(item)
+                if (groupKey && groupKey.trim()) {
+                    const key = groupKey.trim()
+                    result[key] = (result[key] || 0) + 1
+                }
+            } catch (error) {
+                console.warn('分组统计时出错:', error, item)
+            }
+        }
+        
         return result
     }
 
@@ -177,7 +221,7 @@ export const useExcelDataProcessor = () => {
      * @returns
      */
     const groupArray = (array: (string | number)[][][]) => {
-        if (array.length === 0) return []
+        if (!array || array.length === 0) return []
 
         if (array.length === 10) {
             return [
@@ -221,7 +265,7 @@ export const useExcelDataProcessor = () => {
         array: GroupedData[],
         sheetName: string
     ): ExcelSheet => {
-        if (array.length === 0) {
+        if (!array || array.length === 0) {
             return {
                 name: sheetName,
                 data: [],
@@ -232,6 +276,10 @@ export const useExcelDataProcessor = () => {
 
         // 将对象转换为键值对数组
         const convertedEntries = array.map((item) => {
+            if (!item || typeof item !== 'object') {
+                return []
+            }
+
             // 1.按键升序排序
             const sortedEntries = Object.entries(item).sort((a, b) =>
                 a[0].localeCompare(b[0])
@@ -244,7 +292,16 @@ export const useExcelDataProcessor = () => {
             ])
 
             return replacedEntries
-        })
+        }).filter(entries => entries.length > 0)
+
+        if (convertedEntries.length === 0) {
+            return {
+                name: sheetName,
+                data: [],
+                rowCount: 0,
+                colCount: 0
+            }
+        }
 
         // 根据业务逻辑对数据进行分组
         const groupedData = groupArray(convertedEntries)
@@ -255,7 +312,6 @@ export const useExcelDataProcessor = () => {
         // 生成表头
         if (transformedData.length > 0) {
             const headers = generateHeaders(transformedData[0].length)
-
             transformedData.unshift(headers)
         }
 
@@ -275,12 +331,14 @@ export const useExcelDataProcessor = () => {
      * @returns 转换后的表格数据
      */
     const transformToTableFormat = (array: (string | number)[][][]) => {
-        if (array.length === 0) return []
+        if (!array || array.length === 0) return []
 
         // 对齐所有组的长度
         const alignedGroups = alignArrayLengths(array)
         const maxRowCount =
             alignedGroups.length > 0 ? alignedGroups[0].length : 0
+
+        if (maxRowCount === 0) return []
 
         // 初始化结果数组
         const tableData: (string | number)[][] = Array.from(
@@ -310,7 +368,7 @@ export const useExcelDataProcessor = () => {
      * @returns 对齐后的数组集合
      */
     const alignArrayLengths = (arrays: (string | number)[][][]) => {
-        if (arrays.length === 0) return []
+        if (!arrays || arrays.length === 0) return []
 
         const maxLength = Math.max(...arrays.map((arr) => arr.length))
 

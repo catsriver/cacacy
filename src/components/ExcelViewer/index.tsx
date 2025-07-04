@@ -1,4 +1,4 @@
-import { useState, type FC } from 'react'
+import { useState, useEffect, type FC } from 'react'
 import {
     Box,
     Text,
@@ -46,18 +46,30 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
         isOperating
     } = useExcelViewer(file)
 
-    const [previewData, setPreviewData] = useState<ExcelSheet[]>(getPreviewData)
+    // 获取当前显示的数据
+    const currentDisplayData = previewMode === 'analysis' ? getPreviewData : file.sheets
+
+    // 当文件变化时重置选中的工作表
+    useEffect(() => {
+        setSelectedSheet(0)
+    }, [file.id])
+
+    // 当预览模式变化时，确保选中的工作表索引有效
+    useEffect(() => {
+        if (currentDisplayData.length > 0 && selectedSheet >= currentDisplayData.length) {
+            setSelectedSheet(0)
+        }
+    }, [previewMode, currentDisplayData.length, selectedSheet])
 
     // 渲染表格预览
     const renderTablePreview = (
         sheet: ExcelSheet,
-        previewMode: 'analysis' | 'original'
+        mode: 'analysis' | 'original'
     ) => {
         const maxRows = 20 // 限制预览行数
         const maxCols = 10 // 限制预览列数
-        let previewData
 
-        if (sheet.data.length === 0) {
+        if (!sheet || !sheet.data || sheet.data.length === 0) {
             return (
                 <Box p='6' style={{ textAlign: 'center' }}>
                     <Text size='3' style={{ color: 'var(--gray-10)' }}>
@@ -67,121 +79,116 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
             )
         }
 
-        // 分析模式
-        if (previewMode === 'analysis') {
-            previewData = sheet.data
+        let displayData = sheet.data
+        let showRowTruncation = false
+        let showColTruncation = false
 
+        // 原始模式需要限制显示行列数
+        if (mode === 'original') {
+            if (sheet.data.length > maxRows) {
+                displayData = sheet.data.slice(0, maxRows)
+                showRowTruncation = true
+            }
+            
+            if (sheet.colCount > maxCols) {
+                displayData = displayData.map(row => row.slice(0, maxCols))
+                showColTruncation = true
+            }
+        }
+
+        // 确保至少有表头
+        if (displayData.length === 0) {
             return (
-                <ScrollArea style={{ maxHeight: '600px' }}>
-                    <Table.Root>
-                        <Table.Header>
-                            <Table.Row>
-                                {previewData[0].map((header, index) => (
-                                    <Table.ColumnHeaderCell
-                                        key={index}
-                                        style={{ minWidth: '20px' }}
-                                    >
-                                        {header}
-                                    </Table.ColumnHeaderCell>
-                                ))}
-                            </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                            {previewData.slice(1).map((row, rowIndex) => (
-                                <Table.Row key={rowIndex}>
-                                    {row.map((cell, cellIndex) => (
-                                        <Table.Cell key={cellIndex}>
-                                            <Text size='2'>{cell}</Text>
-                                        </Table.Cell>
-                                    ))}
-                                </Table.Row>
-                            ))}
-                        </Table.Body>
-                    </Table.Root>
-                </ScrollArea>
+                <Box p='6' style={{ textAlign: 'center' }}>
+                    <Text size='3' style={{ color: 'var(--gray-10)' }}>
+                        暂无可显示的数据
+                    </Text>
+                </Box>
             )
         }
 
-        // 原始模式
-        if (previewMode === 'original') {
-            previewData = sheet.data.slice(0, maxRows)
+        const headers = displayData[0] || []
+        const dataRows = displayData.slice(1)
 
-            return (
-                <ScrollArea style={{ maxHeight: '600px' }}>
-                    <Table.Root>
-                        <Table.Header>
-                            <Table.Row>
-                                {previewData[0]
-                                    .slice(0, maxCols)
-                                    .map((header, index) => (
-                                        <Table.ColumnHeaderCell
-                                            key={index}
-                                            style={{ minWidth: '120px' }}
-                                        >
-                                            {header}
-                                        </Table.ColumnHeaderCell>
-                                    ))}
-
-                                {sheet.colCount > maxCols && (
-                                    <Table.ColumnHeaderCell>
+        return (
+            <ScrollArea style={{ maxHeight: '600px' }}>
+                <Table.Root>
+                    <Table.Header>
+                        <Table.Row>
+                            {headers.map((header, index) => (
+                                <Table.ColumnHeaderCell
+                                    key={index}
+                                    style={{ 
+                                        minWidth: mode === 'analysis' ? '120px' : '100px',
+                                        maxWidth: mode === 'original' ? '200px' : 'none'
+                                    }}
+                                >
+                                    <Text size="2" weight="medium">
+                                        {String(header || `列${index + 1}`)}
+                                    </Text>
+                                </Table.ColumnHeaderCell>
+                            ))}
+                            {showColTruncation && (
+                                <Table.ColumnHeaderCell>
+                                    <Text
+                                        size='2'
+                                        style={{ color: 'var(--gray-10)' }}
+                                    >
+                                        ...还有 {sheet.colCount - maxCols} 列
+                                    </Text>
+                                </Table.ColumnHeaderCell>
+                            )}
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {dataRows.map((row, rowIndex) => (
+                            <Table.Row key={rowIndex}>
+                                {row.map((cell, cellIndex) => (
+                                    <Table.Cell
+                                        key={cellIndex}
+                                        style={{ 
+                                            maxWidth: mode === 'original' ? '200px' : 'none',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                    >
+                                        <Text size='2'>
+                                            {String(cell ?? '')}
+                                        </Text>
+                                    </Table.Cell>
+                                ))}
+                                {showColTruncation && (
+                                    <Table.Cell>
                                         <Text
                                             size='2'
                                             style={{ color: 'var(--gray-10)' }}
                                         >
-                                            ...还有 {sheet.colCount - maxCols}{' '}
-                                            列
+                                            ...
                                         </Text>
-                                    </Table.ColumnHeaderCell>
+                                    </Table.Cell>
                                 )}
                             </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                            {previewData.slice(1).map((row, rowIndex) => (
-                                <Table.Row key={rowIndex}>
-                                    {row
-                                        .slice(0, maxRows)
-                                        .map((cell, cellIndex) => (
-                                            <Table.Cell
-                                                key={cellIndex}
-                                                style={{ maxWidth: '200px' }}
-                                            >
-                                                <Text size='2'>{cell}</Text>
-                                            </Table.Cell>
-                                        ))}
+                        ))}
+                    </Table.Body>
+                </Table.Root>
 
-                                    {sheet.rowCount > maxRows && (
-                                        <Table.Cell>
-                                            <Text
-                                                size='2'
-                                                style={{
-                                                    color: 'var(--gray-10)'
-                                                }}
-                                            >
-                                                ...
-                                            </Text>
-                                        </Table.Cell>
-                                    )}
-                                </Table.Row>
-                            ))}
-                        </Table.Body>
-                    </Table.Root>
-
-                    {sheet.rowCount > maxRows && (
-                        <Box
-                            p='3'
-                            style={{
-                                textAlign: 'center',
-                                background: 'var(--gray-2)'
-                            }}
-                        >
-                            <Text size='2' style={{ color: 'var(--gray-10)' }}>
-                                ...还有 {sheet.rowCount - maxRows} 行数据
-                            </Text>
-                        </Box>
-                    )}
-                </ScrollArea>
-            )
-        }
+                {showRowTruncation && (
+                    <Box
+                        p='3'
+                        style={{
+                            textAlign: 'center',
+                            background: 'var(--gray-2)',
+                            borderTop: '1px solid var(--gray-6)'
+                        }}
+                    >
+                        <Text size='2' style={{ color: 'var(--gray-10)' }}>
+                            ...还有 {sheet.rowCount - maxRows} 行数据
+                        </Text>
+                    </Box>
+                )}
+            </ScrollArea>
+        )
     }
 
     if (file.status === 'error') {
@@ -242,6 +249,43 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
         )
     }
 
+    if (file.status === 'processing') {
+        return (
+            <Card>
+                <Flex align='center' justify='between' mb='4'>
+                    <Flex align='center' gap='3'>
+                        <FileTextIcon
+                            width='20'
+                            height='20'
+                            style={{ color: 'var(--blue-9)' }}
+                        />
+                        <Text size='4' weight='medium'>
+                            Excel 文件详情
+                        </Text>
+                        <Badge color={getStatusColor(file.status)} variant='soft'>
+                            {getStatusText(file.status)}
+                        </Badge>
+                    </Flex>
+                    <IconButton variant='soft' color='red' onClick={onClearFile}>
+                        <Cross2Icon width='16' height='16' />
+                    </IconButton>
+                </Flex>
+
+                <Box p='6' style={{ textAlign: 'center' }}>
+                    <div className='processing-indicator'>
+                        <FileTextIcon width='32' height='32' />
+                    </div>
+                    <Text size='3' weight='medium' mt='3'>
+                        正在解析 Excel 文件...
+                    </Text>
+                    <Text size='2' style={{ color: 'var(--gray-10)' }} mt='1'>
+                        请稍候，正在读取工作表数据
+                    </Text>
+                </Box>
+            </Card>
+        )
+    }
+
     return (
         <Card>
             <Flex align='center' justify='between' mb='4'>
@@ -291,16 +335,78 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
 
             {file.status === 'completed' && file.sheets.length > 0 && (
                 <>
+                    {/* 预览模式切换 */}
+                    <Flex align='center' justify='between' mb='3'>
+                        <Text size='3' weight='medium'>
+                            数据预览
+                        </Text>
+                        <Flex align='center' gap='2'>
+                            <Button
+                                variant={
+                                    previewMode === 'analysis'
+                                        ? 'solid'
+                                        : 'soft'
+                                }
+                                size='2'
+                                onClick={() => setPreviewMode('analysis')}
+                            >
+                                {previewMode === 'analysis' ? (
+                                    <EyeOpenIcon width='14' height='14' />
+                                ) : (
+                                    <EyeClosedIcon width='14' height='14' />
+                                )}
+                                解析结果
+                            </Button>
+                            <Button
+                                variant={
+                                    previewMode === 'original'
+                                        ? 'solid'
+                                        : 'soft'
+                                }
+                                size='2'
+                                onClick={() => setPreviewMode('original')}
+                            >
+                                {previewMode === 'original' ? (
+                                    <EyeOpenIcon width='14' height='14' />
+                                ) : (
+                                    <EyeClosedIcon width='14' height='14' />
+                                )}
+                                原始表格
+                            </Button>
+                        </Flex>
+                    </Flex>
+
+                    {/* 数据状态提示 */}
+                    {previewMode === 'analysis' && getPreviewData.length === 0 && (
+                        <Box
+                            p='4'
+                            mb='4'
+                            style={{
+                                background: 'var(--orange-2)',
+                                borderRadius: '8px',
+                                border: '1px solid var(--orange-6)',
+                                textAlign: 'center'
+                            }}
+                        >
+                            <Text size='3' weight='medium' mb='2' style={{ color: 'var(--orange-11)' }}>
+                                无法生成解析结果
+                            </Text>
+                            <Text size='2' style={{ color: 'var(--orange-10)' }}>
+                                当前 Excel 文件的数据格式不符合解析要求，请查看原始表格或检查数据格式
+                            </Text>
+                        </Box>
+                    )}
+
                     {/* 工作表选项卡 */}
-                    <Tabs.Root
-                        value={selectedSheet.toString()}
-                        onValueChange={(value) =>
-                            setSelectedSheet(parseInt(value))
-                        }
-                    >
-                        <Flex align='center' justify='between' mb='3'>
+                    {currentDisplayData.length > 0 && (
+                        <Tabs.Root
+                            value={selectedSheet.toString()}
+                            onValueChange={(value) =>
+                                setSelectedSheet(parseInt(value))
+                            }
+                        >
                             <Tabs.List>
-                                {previewData.map((sheet, index) => (
+                                {currentDisplayData.map((sheet, index) => (
                                     <Tabs.Trigger
                                         key={index}
                                         value={index.toString()}
@@ -315,144 +421,89 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
                                 ))}
                             </Tabs.List>
 
-                            <Flex align='center' gap='2'>
-                                <Button
-                                    variant={
-                                        previewMode === 'analysis'
-                                            ? 'solid'
-                                            : 'soft'
-                                    }
-                                    size='1'
-                                    onClick={() => {
-                                        setPreviewMode('analysis')
-                                        setPreviewData(getPreviewData)
-                                    }}
-                                >
-                                    {previewMode === 'analysis' ? (
-                                        <EyeOpenIcon width='14' height='14' />
-                                    ) : (
-                                        <EyeClosedIcon width='14' height='14' />
-                                    )}
-                                    解析结果
-                                </Button>
-                                <Button
-                                    variant={
-                                        previewMode === 'original'
-                                            ? 'solid'
-                                            : 'soft'
-                                    }
-                                    size='1'
-                                    onClick={() => {
-                                        setPreviewMode('original')
-                                        setPreviewData(file.sheets)
-                                    }}
-                                >
-                                    {previewMode === 'original' ? (
-                                        <EyeOpenIcon width='14' height='14' />
-                                    ) : (
-                                        <EyeClosedIcon width='14' height='14' />
-                                    )}
-                                    原始表格
-                                </Button>
-                            </Flex>
-                        </Flex>
+                            {currentDisplayData.map((sheet, index) => (
+                                <Tabs.Content key={index} value={index.toString()}>
+                                    <Card mb='4'>
+                                        <Flex
+                                            align='center'
+                                            justify='between'
+                                            mb='3'
+                                        >
+                                            <Flex align='center' gap='3'>
+                                                <Text size='3' weight='bold'>
+                                                    {sheet.name}
+                                                </Text>
+                                                <Badge variant='soft'>
+                                                    {sheet.rowCount}行 x{' '}
+                                                    {sheet.colCount}列
+                                                </Badge>
+                                            </Flex>
 
-                        {previewData.map((sheet, index) => (
-                            <Tabs.Content key={index} value={index.toString()}>
-                                <Card mb='4'>
-                                    <Flex
-                                        align='center'
-                                        justify='between'
-                                        mb='3'
-                                    >
-                                        <Flex align='center' gap='3'>
-                                            <Text size='3' weight='bold'>
-                                                {sheet.name}
-                                            </Text>
-                                            <Badge variant='soft'>
-                                                {sheet.rowCount}行 x{' '}
-                                                {sheet.colCount}列
-                                            </Badge>
+                                            {previewMode === 'analysis' &&
+                                                sheet.data.length > 0 && (
+                                                    <Flex align='center' gap='3'>
+                                                        <Button
+                                                            variant='soft'
+                                                            size='2'
+                                                            disabled={
+                                                                isSheetCopied(
+                                                                    sheet
+                                                                ) || isOperating
+                                                            }
+                                                            onClick={() =>
+                                                                handleCopyToClipboard(
+                                                                    sheet
+                                                                )
+                                                            }
+                                                        >
+                                                            {isSheetCopied(
+                                                                sheet
+                                                            ) ? (
+                                                                <>
+                                                                    <CheckIcon
+                                                                        width='14'
+                                                                        height='14'
+                                                                    />
+                                                                    已复制
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <CopyIcon
+                                                                        width='14'
+                                                                        height='14'
+                                                                    />
+                                                                    复制到剪切板
+                                                                </>
+                                                            )}
+                                                        </Button>
+                                                        <Button
+                                                            variant='soft'
+                                                            size='2'
+                                                            disabled={isOperating}
+                                                            onClick={() =>
+                                                                handleExportToExcel(
+                                                                    sheet
+                                                                )
+                                                            }
+                                                        >
+                                                            <DownloadIcon
+                                                                width='14'
+                                                                height='14'
+                                                            />
+                                                            导出Excel
+                                                        </Button>
+                                                    </Flex>
+                                                )}
                                         </Flex>
 
-                                        {previewMode === 'analysis' &&
-                                            sheet.data.length > 0 && (
-                                                <Flex align='center' gap='3'>
-                                                    <Button
-                                                        variant='soft'
-                                                        size='2'
-                                                        disabled={
-                                                            isSheetCopied(
-                                                                sheet
-                                                            ) || isOperating
-                                                        }
-                                                        onClick={() =>
-                                                            handleCopyToClipboard(
-                                                                sheet
-                                                            )
-                                                        }
-                                                    >
-                                                        {isSheetCopied(
-                                                            sheet
-                                                        ) ? (
-                                                            <>
-                                                                <CheckIcon
-                                                                    width='14'
-                                                                    height='14'
-                                                                />
-                                                                已复制
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <CopyIcon
-                                                                    width='14'
-                                                                    height='14'
-                                                                />
-                                                                复制到剪切板
-                                                            </>
-                                                        )}
-                                                    </Button>
-                                                    <Button
-                                                        variant='soft'
-                                                        size='2'
-                                                        disabled={isOperating}
-                                                        onClick={() =>
-                                                            handleExportToExcel(
-                                                                sheet
-                                                            )
-                                                        }
-                                                    >
-                                                        <DownloadIcon
-                                                            width='14'
-                                                            height='14'
-                                                        />
-                                                        导出Excel
-                                                    </Button>
-                                                </Flex>
-                                            )}
-                                    </Flex>
-
-                                    {/* 渲染表格数据 */}
-                                    {renderTablePreview(sheet, previewMode)}
-                                </Card>
-                            </Tabs.Content>
-                        ))}
-                    </Tabs.Root>
+                                        {/* 渲染表格数据 */}
+                                        {renderTablePreview(sheet, previewMode)}
+                                    </Card>
+                                </Tabs.Content>
+                            ))}
+                        </Tabs.Root>
+                    )}
                 </>
-            )}
-
-            {file.status === 'processing' && (
-                <Box p='6' style={{ textAlign: 'center' }}>
-                    <div className='processing-indicator'>
-                        <FileTextIcon width='32' height='32' />
-                    </div>
-                    <Text size='3' weight='medium' mt='3'>
-                        正在解析 Excel 文件...
-                    </Text>
-                    <Text size='2' style={{ color: 'var(--gray-10)' }} mt='1'>
-                        请稍候，正在读取工作表数据
-                    </Text>
-                </Box>
             )}
         </Card>
     )
