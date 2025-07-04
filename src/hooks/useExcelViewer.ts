@@ -94,6 +94,8 @@ export const useExcelViewer = (file: ExcelFile | null) => {
                             previewData.push(generatedSheet)
                         }
                     }
+
+                  console.log(previewData)
                 } catch (sheetError) {
                     console.error(
                         `处理工作表 ${sheet.name} 时出错:`,
