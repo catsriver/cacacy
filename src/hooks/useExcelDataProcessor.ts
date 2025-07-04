@@ -206,8 +206,7 @@ export const useExcelDataProcessor = () => {
                 
                    
                     result[key] = (result[key] || 0) + 1
-                } catch (error) {
-                console.warn('分组统计时出错:', error, item)
+                
             }
         }
         
