@@ -197,8 +197,8 @@ export const useExcelDataProcessor = () => {
         const result: GroupedData = {}
 
         for (const item of arr) {
-                const groupKey = generateKey(item)  
-                    result[key] = (result[key] || 0) + 1
+                const key = generateKey(item)  
+                result[key] = (result[key] || 0) + 1
                 
             
         }
