@@ -581,10 +581,10 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
                                                 name='example'
                                             >
                                                 <CheckboxGroup.Item value='1'>
-                                                    脏污
+                                                    占位符
                                                 </CheckboxGroup.Item>
                                                 <CheckboxGroup.Item value='3'>
-                                                   划伤
+                                                   占位符
                                                 </CheckboxGroup.Item>
                                             </CheckboxGroup.Root>
                                         </Flex>
