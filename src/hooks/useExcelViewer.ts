@@ -83,7 +83,6 @@ export const useExcelViewer = (file: ExcelFile | null) => {
 
                     // 3.分组统计
                     const counted = Object.values(filtered)
-                        .filter(records => records && records.length > 0)
                         .map((records) =>
                             counteByKey(records, (record) => String(record['设备ID'] || ''))
                         )
