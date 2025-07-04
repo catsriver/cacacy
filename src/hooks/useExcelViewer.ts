@@ -57,6 +57,8 @@ export const useExcelViewer = (file: ExcelFile | null) => {
 
                     // 1.转json
                     const jsonData = sheet2json(sheet)
+
+                  console.log(jsonData)
                     
                     // 检查是否成功解析出数据
                     if (!jsonData || Object.keys(jsonData).length === 0) {
