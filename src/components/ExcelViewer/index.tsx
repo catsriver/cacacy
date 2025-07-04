@@ -557,6 +557,26 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
                                                 )}
                                         </Flex>
 
+                                      <Flex>
+                                        <Flex>
+                                            <CheckboxGroup.Root
+                                                defaultValue={['1']}
+                                                name='example'
+                                            >
+                                                <CheckboxGroup.Item value='1'>
+                                                    Fun
+                                                </CheckboxGroup.Item>
+                                                <CheckboxGroup.Item value='2'>
+                                                    Serious
+                                                </CheckboxGroup.Item>
+                                                <CheckboxGroup.Item value='3'>
+                                                    Smart
+                                                </CheckboxGroup.Item>
+                                            </CheckboxGroup.Root>
+                                        </Flex>
+                                        <Flex></Flex>
+                                    </Flex>
+
                                         {/* 渲染表格数据 */}
                                         {renderTablePreview(sheet, previewMode)}
                                     </Card>
