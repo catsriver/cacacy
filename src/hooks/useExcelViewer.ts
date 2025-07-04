@@ -80,7 +80,6 @@ export const useExcelViewer = (file: ExcelFile | null) => {
                         return
                     }
 
-                  
 
                     // 3.分组统计
                     const counted = Object.values(filtered)
@@ -88,6 +87,8 @@ export const useExcelViewer = (file: ExcelFile | null) => {
                         .map((records) =>
                             counteByKey(records, (record) => String(record['设备ID'] || ''))
                         )
+
+                    console.log(counted)
 
                     // 4.转换为表格数据
                     if (counted.length > 0) {
