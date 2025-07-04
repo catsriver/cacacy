@@ -39,12 +39,12 @@ export const useExcelViewer = (file: ExcelFile | null) => {
 
     // 生成预览数据
     const getPreviewData = useMemo(() => {
-        if (!file || file.status !== 'completed') return {}
+        if (!file || file.status !== 'completed') return []
 
         const targetDefects = ['脏污', '划伤']
         // const targetLines = []
 
-        const previewData: { [sheetName: string]: ExcelSheet } = {}
+        const previewData: ExcelSheet[] = []
 
         try {
             file.sheets.forEach((sheet) => {
@@ -58,8 +58,6 @@ export const useExcelViewer = (file: ExcelFile | null) => {
                         targetDefects
                     })
 
-                    console.log(filtered)
-
                     // 3.分组统计
                     const counted = Object.values(filtered).map((item) =>
                         counteByKey(item, (key) => String(key['设备ID'] || ''))
@@ -67,10 +65,7 @@ export const useExcelViewer = (file: ExcelFile | null) => {
 
                     // 4.转换为表格数据
                     if (counted.length > 0) {
-                        previewData[sheet.name] = generateSheetData(
-                            counted,
-                            sheet.name
-                        )
+                        previewData.push(generateSheetData(counted, sheet.name))
                     }
                 } catch (sheetError) {
                     console.error(
@@ -82,7 +77,7 @@ export const useExcelViewer = (file: ExcelFile | null) => {
             })
         } catch (error) {
             console.error('获取预览数据失败:', error)
-            return {}
+            return []
         }
 
         return previewData

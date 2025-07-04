@@ -6,7 +6,10 @@ export const useExcelOperations = () => {
     const [copiedSheets, setCopiedSheets] = useState<Set<string>>(new Set())
     const [isOperating, setIsOperating] = useState(false)
 
-    // 复制到剪切板
+    /**
+     * 将数据复制到剪切板
+     * @param sheet 表格数据
+     */
     const copyToClipboard = useCallback(
         async (sheet: ExcelSheet) => {
             if (isOperating) return false
@@ -14,45 +17,17 @@ export const useExcelOperations = () => {
             setIsOperating(true)
 
             try {
-                if (sheet.data.length === 0) {
-                    throw new Error('没有可复制的数据')
+                // 将数据转换为制表符分割的文本格式
+                const rows = sheet.data.map((row) => row.join('\t'))
+                const textContent = [...rows].join('\n')
+
+                // 使用现代剪切板 API
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(textContent)
                 }
-
-                // 转换为 CSV 格式
-                const csvContent = sheet.data
-                    .map((row) =>
-                        row
-                            .map((cell) => {
-                                const cellStr = String(cell || '')
-                                if (
-                                    cellStr.includes(',') ||
-                                    cellStr.includes('"') ||
-                                    cellStr.includes('\n')
-                                ) {
-                                    return `"${cellStr.replace(/"/g, '""')}"`
-                                }
-                                return cellStr
-                            })
-                            .join(',')
-                    )
-                    .join('\n')
-
-                await navigator.clipboard.writeText(csvContent)
-
-                setCopiedSheets((prev) => new Set([...prev, sheet.name]))
-
-                setTimeout(() => {
-                    setCopiedSheets((prev) => {
-                        const newSet = new Set(prev)
-                        newSet.delete(sheet.name)
-                        return newSet
-                    })
-                }, 2000)
-
-                return true
             } catch (error) {
-                console.error('复制失败:', error)
-                throw error
+                console.error('复制到剪切板时出错:', error)
+                throw new Error('复制失败，请重试')
             } finally {
                 setIsOperating(false)
             }
@@ -60,44 +35,72 @@ export const useExcelOperations = () => {
         [isOperating]
     )
 
-    // 导出为 Excel
+    /**
+     * 将数据导出为 Excel 文件
+     * @param sheet 表格数据
+     */
     const exportToExcel = useCallback(
         async (sheet: ExcelSheet) => {
             if (isOperating) return false
 
-            setIsOperating(true)
-
             try {
                 if (sheet.data.length === 0) {
-                    throw new Error('没有可导出的数据')
+                    throw new Error(`${sheet.name}没有可导出的数据`)
                 }
 
-                // 创建新的工作簿
+                // 创建工作簿
                 const workbook = XLSX.utils.book_new()
 
-                // 将处理后的数据转换为工作表
+                // 创建工作表
                 const worksheet = XLSX.utils.aoa_to_sheet(sheet.data)
 
                 // 设置列宽
-                const colWidths =
-                    sheet.data.length > 0
-                        ? sheet.data[0].map(() => ({ wch: 15 }))
-                        : []
-                worksheet['!cols'] = colWidths
+                const columnWidths = sheet.data[0].map((_, index) => {
+                    const maxLength = Math.max(
+                        ...sheet.data.map((row) => String(row[index]).length)
+                    )
+
+                    // 6 < 内容宽度 < 50
+                    return { wch: Math.min(Math.max(maxLength + 5, 6), 50) }
+                })
+                worksheet['!cols'] = columnWidths
+
+                // 设置表头样式
+                const headerRange = XLSX.utils.decode_range(
+                    worksheet['!ref'] || 'A1'
+                )
+                for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+                    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col })
+                    if (!worksheet[cellAddress]) continue
+
+                    worksheet[cellAddress].s = {
+                        font: { bold: true, color: { rgb: 'FFFFFF' } },
+                        fill: { fgColor: { rgb: '4F46E5' } },
+                        alignment: { horizontal: 'center', vertical: 'center' },
+                        border: {
+                            top: { style: 'thin', color: { rgb: '000000' } },
+                            bottom: { style: 'thin', color: { rgb: '000000' } },
+                            left: { style: 'thin', color: { rgb: '000000' } },
+                            right: { style: 'thin', color: { rgb: '000000' } }
+                        }
+                    }
+                }
 
                 // 添加工作表到工作簿
-                XLSX.utils.book_append_sheet(workbook, worksheet, '处理结果')
+                XLSX.utils.book_append_sheet(workbook, worksheet, '分析结果')
+
+                // 生成文件名
+                const timestamp = new Date()
+                    .toISOString()
+                    .slice(0, 19)
+                    .replace(/:/g, '-')
+                const fullFilename = `${sheet.name}分析报告_${timestamp}.xlsx`
 
                 // 导出文件
-                const fileName = `${
-                    sheet.name
-                }_处理结果_${new Date().toLocaleDateString('zh-CN')}.xlsx`
-                XLSX.writeFile(workbook, fileName)
-
-                return true
+                XLSX.writeFile(workbook, fullFilename)
             } catch (error) {
-                console.error('导出失败:', error)
-                throw error
+                console.error('导出 Excel 文件时出错:', error)
+                throw new Error('导出失败，请重试')
             } finally {
                 setIsOperating(false)
             }

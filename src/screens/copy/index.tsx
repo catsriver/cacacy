@@ -69,7 +69,7 @@ const Copy = () => {
                                     <FileTextIcon width='16' height='16' />
                                 </Box>
                                 <Text size='4' weight='medium'>
-                                    数据预览
+                                    数据提取
                                 </Text>
                             </Flex>
                             <Text
@@ -79,7 +79,8 @@ const Copy = () => {
                                     lineHeight: '1.5'
                                 }}
                             >
-                                快速预览 Excel 文件内容和结构，支持多工作表切换
+                                快速解析 Excel
+                                文件内容和结构，提取相关数据，支持多工作表切换
                             </Text>
                         </Card>
 
@@ -96,7 +97,7 @@ const Copy = () => {
                                     <FileTextIcon width='16' height='16' />
                                 </Box>
                                 <Text size='4' weight='medium'>
-                                    格式转换
+                                    数据导出
                                 </Text>
                             </Flex>
                             <Text
@@ -106,7 +107,7 @@ const Copy = () => {
                                     lineHeight: '1.5'
                                 }}
                             >
-                                转换为 CSV、JSON 等多种格式，保持数据完整性
+                                导出到剪切板或 xlsx 格式文件，保持数据完整性
                             </Text>
                         </Card>
                     </Flex>
@@ -144,8 +145,8 @@ const Copy = () => {
                                     size='2'
                                     style={{ color: 'var(--gray-11)' }}
                                 >
-                                    自动解析所有工作表，提供表格和 JSON
-                                    两种预览模式
+                                    自动解析所有工作表，提供 解析结果 和
+                                    原始表格 两种预览模式
                                 </Text>
                             </Box>
                             <Box>
@@ -156,7 +157,8 @@ const Copy = () => {
                                     size='2'
                                     style={{ color: 'var(--gray-11)' }}
                                 >
-                                    可将任意工作表导出为 CSV 或 JSON 格式文件
+                                    可将任意工作表 复制到剪切板 或 导出为 xlsx
+                                    格式文件
                                 </Text>
                             </Box>
                         </Flex>
