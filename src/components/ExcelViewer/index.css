@@ -1,0 +1,97 @@
+.processing-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: var(--orange-3);
+  border-radius: 50%;
+  color: var(--orange-9);
+  animation: pulse 2s infinite;
+}
+
+.processing-indicator svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 表格样式优化 */
+.excel-viewer table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.excel-viewer th,
+.excel-viewer td {
+  border: 1px solid var(--gray-6);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.excel-viewer th {
+  background: var(--gray-3);
+  font-weight: 500;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.excel-viewer tr:hover td {
+  background: var(--gray-2);
+}
+
+/* JSON 预览样式 */
+.json-preview {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  line-height: 1.4;
+  background: var(--gray-1);
+  border: 1px solid var(--gray-6);
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+/* 工作表标签样式 */
+.sheet-tabs {
+  border-bottom: 1px solid var(--gray-6);
+  margin-bottom: 16px;
+}
+
+.sheet-tab {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.sheet-tab:hover {
+  background: var(--gray-3);
+}
+
+.sheet-tab.active {
+  border-bottom-color: var(--blue-9);
+  color: var(--blue-11);
+  background: var(--blue-2);
+}

@@ -1,0 +1,88 @@
+.upload-zone {
+  background: var(--gray-2);
+  border: 2px dashed var(--gray-7);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-zone:hover {
+  border-color: var(--accent-8);
+  background: var(--accent-2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.upload-zone.dragging {
+  border-color: var(--accent-9);
+  background: var(--accent-3);
+  transform: scale(1.02);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.upload-zone.uploading {
+  border-color: var(--blue-8);
+  background: var(--blue-2);
+  cursor: not-allowed;
+}
+
+.upload-zone.uploading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+.upload-icon {
+  padding: 16px;
+  background: var(--accent-3);
+  border-radius: 50%;
+  color: var(--accent-9);
+  transition: all 0.3s ease;
+}
+
+.upload-zone:hover .upload-icon {
+  background: var(--accent-4);
+  transform: scale(1.1);
+}
+
+.upload-zone.dragging .upload-icon {
+  background: var(--accent-5);
+  transform: scale(1.2);
+}
+
+.upload-zone.uploading .upload-icon {
+  background: var(--blue-4);
+  color: var(--blue-9);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
