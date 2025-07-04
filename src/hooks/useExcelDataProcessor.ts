@@ -201,18 +201,12 @@ export const useExcelDataProcessor = () => {
         }
 
         for (const item of arr) {
-            try {
-                const groupKey = generateKey(item)
-                if (groupKey && groupKey.trim()) {
-                    const key = groupKey.trim()
-                    result[key] = (result[key] || 0) + 1
-                }
-            } catch (error) {
-                console.warn('分组统计时出错:', error, item)
-            }
+            for (const item of arr) {
+            const groupKey = generateKey(item)
+            result[groupKey] = (result[groupKey] || 0) + 1
         }
-        
         return result
+        
     }
 
     /**
