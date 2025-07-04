@@ -9,7 +9,8 @@ import {
     IconButton,
     ScrollArea,
     Table,
-    Tabs
+    Tabs,
+  CheckboxGroup
 } from '@radix-ui/themes'
 import {
     FileTextIcon,
@@ -557,6 +558,7 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
                                                 )}
                                         </Flex>
 
+                                      {/* 筛选功能区 */}
                                       <Flex>
                                         <Flex>
                                             <CheckboxGroup.Root
