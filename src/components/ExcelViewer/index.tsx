@@ -561,15 +561,13 @@ const ExcelViewer: FC<ExcelViewerProps> = ({ file, onClearFile }) => {
                                       {/* 筛选功能区 */}
                                       <Flex>
                                         <Flex>
+                                          <Text>线别</Text>
                                             <CheckboxGroup.Root
                                                 defaultValue={['1']}
                                                 name='example'
                                             >
                                                 <CheckboxGroup.Item value='1'>
                                                     脏污
-                                                </CheckboxGroup.Item>
-                                                <CheckboxGroup.Item value='2'>
-                                                    Serious
                                                 </CheckboxGroup.Item>
                                                 <CheckboxGroup.Item value='3'>
                                                    划伤
