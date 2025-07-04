@@ -10,7 +10,7 @@ import {
     ScrollArea,
     Table,
     Tabs,
-  CheckboxCard
+  CheckboxGroup
 } from '@radix-ui/themes'
 import {
     FileTextIcon,
